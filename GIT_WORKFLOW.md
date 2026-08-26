@@ -130,3 +130,42 @@ If the same line in a file was modified both on GitHub and locally:
    git commit -m "Resolve merge conflict in <file>"
    git push origin main
    ```
+
+---
+
+## 7. How to Revert / Undo a Merge or Pull
+
+Yes! You can always undo or revert a merge at any point:
+
+### Case 1: You just pulled/merged and want to immediately undo it
+If you just ran `git pull` or `git merge` and realized it broke something:
+```bash
+# Instantly roll back to the state right before the pull/merge
+git reset --hard ORIG_HEAD
+```
+*(Git automatically saves `ORIG_HEAD` as a backup bookmark right before any pull or merge).*
+
+### Case 2: A merge is currently failing or stuck in conflicts
+If you are in the middle of a messy merge and want to cancel everything back to clean state:
+```bash
+git merge --abort
+```
+
+### Case 3: You already pushed the merge and want to reverse it safely
+If you already shared the merge and want to cleanly reverse its changes via a new commit:
+```bash
+# Revert a merge commit (keeps branch history intact)
+git revert -m 1 <commit-hash-of-the-merge>
+git push origin main
+```
+
+### Case 4: The Ultimate Safety Net (`git reflog`)
+Git tracks every action you take with timestamps. You can jump back to any previous moment:
+```bash
+# 1. View your history of actions
+git reflog
+
+# 2. Reset your workspace to any exact step in the list (e.g., HEAD@{1})
+git reset --hard HEAD@{1}
+```
+
