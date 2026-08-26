@@ -97,9 +97,20 @@ class AudioOverviewEngine:
 
     def scan_input_files(self, folder_path=None):
         """Scan input folder for articles/syntheses (.md, .txt, .docx, .pdf)"""
+        base_dir = os.path.abspath(self.input_folder)
+
         target_dir = folder_path or self.input_folder
         if not os.path.isabs(target_dir):
+            # If a relative path is passed, resolve it relative to base_dir
+            if folder_path:
+                target_dir = os.path.abspath(os.path.join(base_dir, target_dir))
+            else:
+                target_dir = os.path.abspath(target_dir)
+        else:
             target_dir = os.path.abspath(target_dir)
+
+        if os.path.commonpath([base_dir, target_dir]) != base_dir:
+            raise ValueError("Access denied: folder_path must be a subdirectory of the configured input_folder.")
 
         if not os.path.exists(target_dir):
             os.makedirs(target_dir, exist_ok=True)
@@ -154,13 +165,19 @@ class AudioOverviewEngine:
     def read_article_contents(self, file_paths):
         """Read text from a list of relative or absolute file paths."""
         combined_text = []
+        base_dir = os.path.abspath(self.input_folder)
         for path in file_paths:
             full_p = path if os.path.isabs(path) else os.path.abspath(path)
             if not os.path.exists(full_p):
                 # Try finding relative to input folder
-                alt_p = os.path.join(os.path.abspath(self.input_folder), path)
+                alt_p = os.path.join(base_dir, path)
                 if os.path.exists(alt_p):
                     full_p = alt_p
+
+            full_p = os.path.abspath(full_p)
+            if os.path.commonpath([base_dir, full_p]) != base_dir:
+                print(f"Access denied: {full_p} is outside the allowed input folder.")
+                continue
 
             if not os.path.exists(full_p):
                 continue
