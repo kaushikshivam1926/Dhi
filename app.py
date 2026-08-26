@@ -8,7 +8,7 @@ os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 import datetime
 import atexit
-from main import execute_sync, clear_vault_history, execute_sync_generator, cancel_event
+from main import clear_vault_history, execute_sync_generator, cancel_event
 from doc_processor import process_documents_generator, get_document_stats
 from web_harvester import WebHarvester
 from arxiv_harvester import ArxivHarvester
