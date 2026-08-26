@@ -109,8 +109,8 @@ class AudioOverviewEngine:
         found_files = []
 
         for root, dirs, files in os.walk(target_dir):
-            if ".obsidian" in root or ".git" in root or "Podcasts" in root:
-                continue
+            # Prune hidden directories and Podcasts directory to avoid traversing them entirely
+            dirs[:] = [d for d in dirs if not d.startswith('.') and d != 'Podcasts']
             for file in files:
                 ext = os.path.splitext(file)[1].lower()
                 if ext in supported_exts:
@@ -506,6 +506,8 @@ tags:
 
         podcasts = []
         for root, dirs, files in os.walk(target_dir):
+            # Prune hidden directories like .obsidian and .git
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
             for file in files:
                 if file.endswith(".md") and ("Podcast" in file or "audio_overview" in file):
                     full_p = os.path.join(root, file)

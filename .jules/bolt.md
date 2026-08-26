@@ -1,0 +1,3 @@
+## 26-08-2024 - Optimizing `os.walk` in Obsidian Vaults
+**Learning:** Checking `if '.obsidian' in root: continue` inside an `os.walk` loop is an anti-pattern. While it skips processing files in that directory, `os.walk` still physically traverses the entire directory structure first. For Obsidian vaults, the `.obsidian` and `.git` folders can contain thousands of cache/plugin/object files, causing severe performance bottlenecks during scans.
+**Action:** Always modify the `dirs` list in-place (`dirs[:] = [d for d in dirs if not d.startswith('.')]`) so `os.walk` prunes the tree and completely skips descending into hidden directories.

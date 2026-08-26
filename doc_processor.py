@@ -819,7 +819,8 @@ def get_harvested_sources(output_dir):
     if not os.path.exists(output_dir):
         return harvested
     for root, dirs, files in os.walk(output_dir):
-        if '.obsidian' in root: continue
+        # Prune hidden directories like .obsidian and .git
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
         for file in files:
             if '_Library_' in file and file.endswith('.md'):
                 filepath = os.path.join(root, file)

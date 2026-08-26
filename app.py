@@ -83,7 +83,8 @@ def get_stats():
             
         all_md_files = []
         for root, dirs, files in os.walk(vault_path):
-            if '.obsidian' in root: continue
+            # Prune hidden directories like .obsidian and .git
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
             for file in files:
                 if file.endswith('.md'):
                     full_path = os.path.join(root, file)
