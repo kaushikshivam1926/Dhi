@@ -66,44 +66,91 @@ class SyncHistory:
 
     def scan_vault_for_migration(self, vault_path):
         """
-        Scans existing vault for MD files and populate history based on frontmatter
+        Scans existing vault for MD files and populate history based on frontmatter.
+        Optimized with multiprocessing for large vaults.
         """
+        import multiprocessing
+
         vault_path = os.path.expanduser(vault_path)
         if not os.path.exists(vault_path):
-            return
+            return 0
             
-        count = 0
+        md_files = []
         for root, dirs, files in os.walk(vault_path):
             # Prune hidden directories like .obsidian and .git
             dirs[:] = [d for d in dirs if not d.startswith('.')]
             for file in files:
                 if file.endswith('.md'):
-                    path = os.path.join(root, file)
-                    try:
-                        with open(path, 'r', encoding='utf-8') as f:
-                            content = f.read(1000) # Only read start for frontmatter
-                            
-                            # Extremely simple frontmatter parsing
-                            title_match = re.search(r'^title: "(.*?)"', content, re.M)
-                            url_match = re.search(r'^audio_url: (.*?)$', content, re.M) # We might need audio_url as a backup ID
-                            
-                            if title_match:
-                                title = title_match.group(1)
-                                # We'll use a title-based key if no GUID is found during scan
-                                # This is a best-effort migration
-                                key = f"migrated-{title}"
-                                if key not in self.history:
-                                    self.history[key] = {
-                                        "title": title,
-                                        "file_path": os.path.relpath(path, start=vault_path),
-                                        "migrated": True
-                                    }
-                                    count += 1
-                    except:
-                        continue
+                    md_files.append(os.path.join(root, file))
+
+        if not md_files:
+            return 0
+
+        count = 0
+
+        # Determine whether to use multiprocessing or synchronous execution
+        if len(md_files) > 100:
+            num_workers = min(os.cpu_count() or 4, len(md_files))
+            chunk_size = max(1, len(md_files) // (num_workers * 2))
+
+            with multiprocessing.Pool(processes=num_workers) as pool:
+                for res in pool.imap_unordered(_process_file_for_migration, md_files, chunksize=chunk_size):
+                    if res:
+                        title = res["title"]
+                        key = f"migrated-{title}"
+                        if key not in self.history:
+                            self.history[key] = {
+                                "title": title,
+                                "file_path": os.path.relpath(res["file_path"], start=vault_path),
+                                "migrated": True
+                            }
+                            count += 1
+        else:
+            # For small number of files, sync execution is faster due to lower overhead
+            for file_path in md_files:
+                res = _process_file_for_migration(file_path)
+                if res:
+                    title = res["title"]
+                    key = f"migrated-{title}"
+                    if key not in self.history:
+                        self.history[key] = {
+                            "title": title,
+                            "file_path": os.path.relpath(res["file_path"], start=vault_path),
+                            "migrated": True
+                        }
+                        count += 1
+
         if count > 0:
             self._save()
         return count
+
+def _process_file_for_migration(file_path):
+    """
+    Helper top-level function for multiprocessing.
+    Reads the file, extracts the title using fast string matching, and returns metadata.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read(1000) # Only read start for frontmatter
+
+            # Fast substring match for title instead of regex
+            title_idx = content.find('\ntitle: "')
+            if title_idx == -1 and content.startswith('title: "'):
+                title_idx = 0
+            elif title_idx != -1:
+                title_idx += 1
+
+            if title_idx != -1:
+                end_idx = content.find('"', title_idx + 8)
+                if end_idx != -1:
+                    title = content[title_idx + 8:end_idx]
+                    return {
+                        "title": title,
+                        "file_path": file_path
+                    }
+    except Exception:
+        pass
+    return None
 
 # Global instance
 db = SyncHistory()
