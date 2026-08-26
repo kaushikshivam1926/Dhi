@@ -1371,4 +1371,4 @@ def static_proxy(path):
 
 if __name__ == '__main__':
     print("Starting Podcast-to-Obsidian Web Management Interface on http://localhost:8080")
-    app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=8080, debug=os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't'), use_reloader=False)
