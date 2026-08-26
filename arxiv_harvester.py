@@ -2,7 +2,6 @@ import arxiv
 import os
 import tarfile
 import tempfile
-import shutil
 import pypandoc
 import time
 import requests
