@@ -141,10 +141,23 @@ class ArxivHarvester:
 
     def convert_latex_to_md(self, tar_path):
         """Unpack a LaTeX source tarball and convert the main .tex file to Markdown."""
+        def is_within_directory(directory, target):
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+            prefix = os.path.commonpath([abs_directory, abs_target])
+            return prefix == abs_directory
+
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
                 with tarfile.open(tar_path, "r:gz") as tar:
-                    tar.extractall(path=temp_dir)
+                    if hasattr(tarfile, 'data_filter'):
+                        tar.extractall(path=temp_dir, filter='data')
+                    else:
+                        for member in tar.getmembers():
+                            member_path = os.path.join(temp_dir, member.name)
+                            if not is_within_directory(temp_dir, member_path):
+                                raise Exception(f"Attempted directory traversal in tar member: {member.name}")
+                        tar.extractall(path=temp_dir)
 
                 # Find the main .tex file
                 tex_files = []
