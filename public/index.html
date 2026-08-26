@@ -182,7 +182,7 @@
                 <!-- Scheduled Jobs Section -->
                 <div class="section-header mb-1" style="margin-top: 1.5rem;">
                     <h3><i data-lucide="calendar-clock" style="width:18px;height:18px;vertical-align:middle;margin-right:6px;"></i> Scheduled Jobs</h3>
-                    <button class="btn-secondary" id="btn-refresh-schedules" style="padding:6px 12px; font-size:0.8rem;">
+                    <button class="btn-secondary" id="btn-refresh-schedules" aria-label="Refresh schedules" style="padding:6px 12px; font-size:0.8rem;">
                         <i data-lucide="refresh-cw"></i>
                     </button>
                 </div>
@@ -443,7 +443,7 @@
                         <div class="form-group mb-0">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                 <label style="font-size: 0.85rem; color: #a1a1aa; margin: 0;">Local Ollama Model</label>
-                                <button type="button" class="icon-btn" id="btn-refresh-cb-ollama-models" title="Refresh available local models" style="color: var(--primary); padding: 2px;">
+                                <button type="button" class="icon-btn" id="btn-refresh-cb-ollama-models" title="Refresh available local models" aria-label="Refresh available local models" style="color: var(--primary); padding: 2px;">
                                     <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
                                 </button>
                             </div>
@@ -1352,11 +1352,11 @@
     </div>
 
     <!-- Add/Edit Show Modal -->
-    <div class="modal-overlay" id="add-show-modal">
+    <div class="modal-overlay" id="add-show-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content glass-card">
             <div class="modal-header">
                 <h2 id="modal-title">Add Podcast Feed / YouTube Channel</h2>
-                <button class="btn-close" id="btn-close-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1378,14 +1378,14 @@
     </div>
 
     <!-- YouTube Modal -->
-    <div class="modal-overlay" id="youtube-modal">
+    <div class="modal-overlay" id="youtube-modal" role="dialog" aria-modal="true" aria-labelledby="youtube-modal-title">
         <div class="modal-content glass-card" style="max-width: 500px;">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <i data-lucide="youtube" class="text-primary"></i>
                     <h2 id="youtube-modal-title">Add YouTube Channel</h2>
                 </div>
-                <button class="btn-close" id="btn-close-youtube-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-youtube-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1411,14 +1411,14 @@
     </div>
 
     <!-- Telegram Modal -->
-    <div class="modal-overlay" id="telegram-modal">
+    <div class="modal-overlay" id="telegram-modal" role="dialog" aria-modal="true" aria-labelledby="telegram-modal-title">
         <div class="modal-content glass-card" style="max-width: 500px;">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <i data-lucide="message-circle" class="text-primary"></i>
                     <h2 id="telegram-modal-title">Add Telegram Channel</h2>
                 </div>
-                <button class="btn-close" id="btn-close-telegram-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-telegram-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1452,14 +1452,14 @@
     </div>
 
     <!-- Episode Browser Modal -->
-    <div class="modal-overlay" id="episode-browser-modal">
+    <div class="modal-overlay" id="episode-browser-modal" role="dialog" aria-modal="true" aria-labelledby="episode-browser-title">
         <div class="modal-content glass-card" style="max-width: 800px; max-height: 80vh; display: flex; flex-direction: column;">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <i data-lucide="list-video" class="text-primary"></i>
                     <h2 id="episode-browser-title">Episodes</h2>
                 </div>
-                <button class="btn-close" id="btn-close-episode-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-episode-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div id="episode-list-container" class="modal-body" style="flex: 1; overflow-y: auto; padding-top: 0;">
                 <div class="input-icon-wrapper mb-1" style="margin-top: 10px; position: sticky; top: 0; z-index: 10; background: var(--bg-card); padding: 5px 0;">
@@ -1478,10 +1478,10 @@
     </div>
 
     <!-- Stop Confirmation Modal -->
-    <div id="stop-confirmation-modal" class="modal">
+    <div id="stop-confirmation-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="stop-confirmation-title">
         <div class="modal-content glass-card" style="max-width: 400px;">
             <div class="modal-header">
-                <h3>Sync Interrupted</h3>
+                <h3 id="stop-confirmation-title">Sync Interrupted</h3>
             </div>
             <div class="modal-body">
                 <p>The current sync process has been stopped. What would you like to do with the remaining items in the queue?</p>
@@ -1502,14 +1502,14 @@
     </div>
 
     <!-- Schedule Modal (shared by all engines) -->
-    <div class="modal-overlay" id="schedule-modal">
+    <div class="modal-overlay" id="schedule-modal" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-header-title">
         <div class="modal-content glass-card" style="max-width: 460px;">
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <i data-lucide="calendar-clock" style="color:var(--primary);"></i>
-                    <h2>Schedule Harvest</h2>
+                    <h2 id="schedule-modal-header-title">Schedule Harvest</h2>
                 </div>
-                <button class="btn-close" id="btn-close-schedule-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-schedule-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
                 <p id="schedule-modal-label" style="font-size:0.95rem; color:#a1a1aa; margin-bottom:1.2rem; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius:8px; border-left: 3px solid var(--primary);">Podcast · All Shows</p>
@@ -1592,14 +1592,14 @@
     </div>
 
     <!-- Run History Modal -->
-    <div class="modal-overlay" id="job-history-modal">
+    <div class="modal-overlay" id="job-history-modal" role="dialog" aria-modal="true" aria-labelledby="job-history-modal-title">
         <div class="modal-content glass-card" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <i data-lucide="history" style="color:var(--primary);"></i>
                     <h2 id="job-history-modal-title">Job Execution History</h2>
                 </div>
-                <button class="btn-close" id="btn-close-history-modal"><i data-lucide="x"></i></button>
+                <button class="btn-close" id="btn-close-history-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
             </div>
             <div id="job-history-container" class="modal-body" style="flex: 1; overflow-y: auto; padding-top: 0;">
                 <div id="job-history-list" style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
@@ -1610,14 +1610,14 @@
     </div>
 
 <!-- Market Data Modal -->
-<div class="modal-overlay" id="marketdata-modal">
+<div class="modal-overlay" id="marketdata-modal" role="dialog" aria-modal="true" aria-labelledby="marketdata-modal-title">
     <div class="modal-content glass-card" style="max-width: 500px;">
         <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <i data-lucide="bar-chart-2" class="text-primary"></i>
                 <h2 id="marketdata-modal-title">Add Data Point</h2>
             </div>
-            <button class="btn-close" id="btn-close-marketdata-modal"><i data-lucide="x"></i></button>
+            <button class="btn-close" id="btn-close-marketdata-modal" aria-label="Close dialog"><i data-lucide="x"></i></button>
         </div>
         <div class="modal-body">
             <div class="form-group">
