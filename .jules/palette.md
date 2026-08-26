@@ -1,0 +1,3 @@
+## 2026-08-26 - Accessible Modals and Icon-Only Buttons Pattern
+**Learning:** In single-page web applications with dynamically rendered content and multi-modal interfaces, screen reader users miss context unless overlays specify `role="dialog"`, `aria-modal="true"`, and `aria-labelledby`. Additionally, icon-only buttons (such as edit/delete cards or header action buttons) require explicit `aria-label` attributes to ensure screen readers announce their function accurately.
+**Action:** Always provide `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` for modal overlays in `public/index.html`, and ensure both static and dynamically template-rendered icon-only buttons include `aria-label` attributes alongside `:focus-visible` outline styles.

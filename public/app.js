@@ -436,10 +436,10 @@ function renderShows() {
             const iconName = isYoutubeFeed ? 'youtube' : 'radio';
             card.innerHTML = `
                 <div class="show-card-actions-top">
-                    <button class="icon-btn" onclick="editShow(${show.originalIndex})" title="Edit Show">
+                    <button class="icon-btn" onclick="editShow(${show.originalIndex})" title="Edit Show" aria-label="Edit Show">
                         <i data-lucide="edit-3"></i>
                     </button>
-                    <button class="icon-btn danger" onclick="deleteShow(${show.originalIndex})" title="Remove Show">
+                    <button class="icon-btn danger" onclick="deleteShow(${show.originalIndex})" title="Remove Show" aria-label="Remove Show">
                         <i data-lucide="trash-2"></i>
                     </button>
                 </div>
@@ -2732,21 +2732,21 @@ function createJobRow(job) {
         </div>
         <div class="sj-actions">
             <span class="sj-badge ${badge.cls}">${badge.text}</span>
-            <button class="icon-btn sj-history-btn" onclick="viewJobHistory('${job.id}')" title="View execution history">
+            <button class="icon-btn sj-history-btn" onclick="viewJobHistory('${job.id}')" title="View execution history" aria-label="View execution history">
                 <i data-lucide="file-clock"></i>
             </button>
             ${isRunning ? `
-                <button class="icon-btn danger sj-cancel-btn" onclick="cancelScheduledJob('${job.id}')" title="Cancel this job">
+                <button class="icon-btn danger sj-cancel-btn" onclick="cancelScheduledJob('${job.id}')" title="Cancel this job" aria-label="Cancel this job">
                     <i data-lucide="x"></i>
                 </button>
             ` : ''}
             ${isUpcoming ? `
-                <button class="icon-btn sj-edit-btn" onclick="editScheduledJob('${job.id}')" title="Edit this job">
+                <button class="icon-btn sj-edit-btn" onclick="editScheduledJob('${job.id}')" title="Edit this job" aria-label="Edit this job">
                     <i data-lucide="edit-2"></i>
                 </button>
             ` : ''}
             ${isPast || isUpcoming ? `
-                <button class="icon-btn danger sj-delete-btn" onclick="deleteScheduledJob('${job.id}')" title="Delete this job">
+                <button class="icon-btn danger sj-delete-btn" onclick="deleteScheduledJob('${job.id}')" title="Delete this job" aria-label="Delete this job">
                     <i data-lucide="trash-2"></i>
                 </button>
             ` : ''}
@@ -3126,16 +3126,16 @@ function renderMarketData() {
             </td>
             <td style="padding: 15px; text-align: right;">
                 <div style="display:flex; gap:8px; justify-content:flex-end;">
-                    <button class="icon-btn" onclick="syncMarketData(${index})" title="Sync Now" style="color:var(--primary);">
+                    <button class="icon-btn" onclick="syncMarketData(${index})" title="Sync Now" aria-label="Sync Now" style="color:var(--primary);">
                         <i data-lucide="refresh-cw" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="icon-btn" onclick="scheduleMarketData(${index})" title="Schedule" style="color:#f59e0b;">
+                    <button class="icon-btn" onclick="scheduleMarketData(${index})" title="Schedule" aria-label="Schedule" style="color:#f59e0b;">
                         <i data-lucide="calendar" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="icon-btn" onclick="editMarketData(${index})" title="Edit" style="color:var(--text-light);">
+                    <button class="icon-btn" onclick="editMarketData(${index})" title="Edit" aria-label="Edit" style="color:var(--text-light);">
                         <i data-lucide="edit-2" style="width:16px; height:16px;"></i>
                     </button>
-                    <button class="icon-btn" onclick="deleteMarketData(${index})" title="Delete" style="color:#ef4444;">
+                    <button class="icon-btn" onclick="deleteMarketData(${index})" title="Delete" aria-label="Delete" style="color:#ef4444;">
                         <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
                     </button>
                 </div>
@@ -3325,10 +3325,10 @@ window.renderYoutubeChannels = function() {
         card.className = 'show-card';
         card.innerHTML = `
             <div class="show-card-actions-top">
-                <button class="icon-btn" onclick="editYoutubeChannel(${index})" title="Edit Channel">
+                <button class="icon-btn" onclick="editYoutubeChannel(${index})" title="Edit Channel" aria-label="Edit Channel">
                     <i data-lucide="edit-3"></i>
                 </button>
-                <button class="icon-btn danger" onclick="deleteYoutubeChannel(${index})" title="Remove Channel">
+                <button class="icon-btn danger" onclick="deleteYoutubeChannel(${index})" title="Remove Channel" aria-label="Remove Channel">
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
@@ -3608,10 +3608,10 @@ window.renderTelegramChannels = function() {
         const keywordsInfo = chan.keywords ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Filter: <span style="color:var(--primary);">${chan.keywords}</span></div>` : '';
         card.innerHTML = `
             <div class="show-card-actions-top">
-                <button class="icon-btn" onclick="editTelegramChannel(${index})" title="Edit Channel">
+                <button class="icon-btn" onclick="editTelegramChannel(${index})" title="Edit Channel" aria-label="Edit Channel">
                     <i data-lucide="edit-3"></i>
                 </button>
-                <button class="icon-btn danger" onclick="deleteTelegramChannel(${index})" title="Remove Channel">
+                <button class="icon-btn danger" onclick="deleteTelegramChannel(${index})" title="Remove Channel" aria-label="Remove Channel">
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
