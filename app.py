@@ -18,7 +18,8 @@ from scheduler import add_schedule, list_schedules, cancel_schedule, delete_sche
 from audio_overview_engine import AudioOverviewEngine, AVAILABLE_VOICES
 
 app = Flask(__name__, static_folder='public')
-CORS(app)
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080").split(",")
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 harvester = WebHarvester()
 arxiv_harvester = ArxivHarvester()
