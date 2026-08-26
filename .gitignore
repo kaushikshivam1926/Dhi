@@ -53,3 +53,4 @@ scratch/
 # OS Metadata
 .DS_Store
 Thumbs.db
+test_vault/
