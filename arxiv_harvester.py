@@ -4,7 +4,6 @@ import tarfile
 import tempfile
 import shutil
 import pypandoc
-import json
 import time
 import requests
 
