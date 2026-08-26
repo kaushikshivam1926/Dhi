@@ -861,6 +861,8 @@ def clear_vault_history(days='all'):
     deleted_count = 0
     # Walk through the vault directory
     for root, dirs, files in os.walk(vault_path):
+        # Prune hidden directories like .obsidian and .git
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
         for file in files:
             if file.endswith(".md"):
                 file_path = os.path.join(root, file)

@@ -74,6 +74,8 @@ class SyncHistory:
             
         count = 0
         for root, dirs, files in os.walk(vault_path):
+            # Prune hidden directories like .obsidian and .git
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
             for file in files:
                 if file.endswith('.md'):
                     path = os.path.join(root, file)
