@@ -951,13 +951,6 @@ def process_file_worker(file_info, input_dir, output_dir, gemini_key, gemini_mod
                     content = ""  # Force native/OCR flow below
                 elif content:
                     # Classify the PDF to detect if it is scanned (image-based) or born-digital.
-                    # Docling already OCR's scanned pages on-device via Apple Vision (OcrMacOptions,
-                    # see extract_text_with_docling) — that text is already the faithful source, so
-                    # for scanned docs we preserve it as-is instead of routing it through an LLM
-                    # "structuring" pass (that step previously fed Vision-OCR'd text to glm-ocr, a
-                    # vision-only OCR model with no text-editing ability, which hallucinated wrong
-                    # facts). Gemini remains available as an explicit opt-in for readers who want
-                    # cleaner formatting and are OK paying for it.
                     is_scanned = False
                     try:
                         pdf_info = classify_pdf(input_path)
