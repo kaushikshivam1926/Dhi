@@ -282,6 +282,10 @@ def _parse_cb_digest_file(path):
     return [(f"{sym.upper()}.value", obs_date, val, 'BACKFILL:CB_DIGEST') for sym, val in values.items()]
 
 
+_MARKET_DIGEST_BLOCK_RE = re.compile(r'### (\S+)\n(.*?)(?=\n### |\Z)', re.DOTALL)
+_MARKET_DIGEST_FIELD_RE = re.compile(r'-\s*\*\*(\w+)\*\*:\s*(.+)')
+
+
 def _parse_market_digest_file(path):
     """Market_Digest_*.md uses a structured '### SYMBOL' / '- **Field**: value'
     format and may have several same-day '## Update at HH:MM:SS' sections
@@ -295,11 +299,11 @@ def _parse_market_digest_file(path):
         content = f.read()
 
     values = {}
-    for block in re.finditer(r'### (\S+)\n(.*?)(?=\n### |\Z)', content, re.DOTALL):
+    for block in _MARKET_DIGEST_BLOCK_RE.finditer(content):
         symbol = block.group(1).strip().upper()
         body = block.group(2)
         fields = {}
-        for line in re.finditer(r'-\s*\*\*(\w+)\*\*:\s*(.+)', body):
+        for line in _MARKET_DIGEST_FIELD_RE.finditer(body):
             fields[line.group(1).lower()] = line.group(2).strip()
         for key in ('close', 'value', 'rate'):
             if key in fields:
