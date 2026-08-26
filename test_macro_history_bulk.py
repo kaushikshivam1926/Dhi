@@ -10,7 +10,19 @@ for mod in ['docx', 'pypandoc', 'bs4', 'google', 'google.genai', 'google.genai.t
     if mod not in sys.modules:
         sys.modules[mod] = MagicMock()
 
-import pytest
+try:
+    import pytest
+except ImportError:
+    import math
+    class _MockPytest:
+        @staticmethod
+        def approx(val, rel=1e-6, abs=1e-12):
+            class _Approx:
+                def __eq__(self, other):
+                    return math.isclose(val, other, rel_tol=rel, abs_tol=abs)
+            return _Approx()
+    pytest = _MockPytest()
+
 import macro_history
 from market_digest_engine import MarketDigestEngine
 

@@ -1,12 +1,15 @@
-import pytest
+try:
+    import pytest
+    @pytest.fixture
+    def client():
+        app.config['TESTING'] = True
+        with app.test_client() as client:
+            yield client
+except ImportError:
+    pass
+
 from app import app
 import os
-
-@pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
 
 def test_cors_allowed_origin(client):
     response = client.options('/api/schedule/list', headers={'Origin': 'http://localhost:8080'})
@@ -20,3 +23,12 @@ def test_cors_disallowed_origin(client):
 def test_cors_no_origin(client):
     response = client.options('/api/schedule/list')
     assert response.headers.get('Access-Control-Allow-Origin') != '*'
+
+if __name__ == '__main__':
+    app.config['TESTING'] = True
+    with app.test_client() as c:
+        test_cors_allowed_origin(c)
+        test_cors_disallowed_origin(c)
+        test_cors_no_origin(c)
+    print("All CORS tests passed.")
+
