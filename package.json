@@ -1,0 +1,21 @@
+{
+  "name": "Podcast to Obsidian",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "source .venv/bin/activate && python app.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.0.4",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}

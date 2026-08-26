@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast to Obsidian Importer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Scrollbar for the log window */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <div class="glass-panel w-full max-w-3xl rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+        
+        <!-- Left Sidebar / Info -->
+        <div class="bg-indigo-600 text-white p-8 md:w-1/3 flex flex-col justify-between">
+            <div>
+                <i data-lucide="headphones" class="w-12 h-12 mb-6 text-indigo-200"></i>
+                <h1 class="text-2xl font-bold mb-2">Podcast to Obsidian</h1>
+                <p class="text-indigo-200 text-sm leading-relaxed mb-6">
+                    Fetch free podcast transcripts from the web and save them directly into your local Obsidian vault as formatted Markdown files.
+                </p>
+                <div class="bg-indigo-700/50 rounded-lg p-4 text-xs text-indigo-100">
+                    <p class="font-semibold mb-1 flex items-center gap-1">
+                        <i data-lucide="info" class="w-4 h-4"></i> Note on Security
+                    </p>
+                    Your browser will ask for permission to write to your local folder. This app runs entirely in your browser and keeps your files local.
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Content / Controls -->
+        <div class="p-8 md:w-2/3 flex flex-col gap-6">
+            
+            <!-- Step 1: Vault Selection -->
+            <div>
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">1. Destination</h2>
+                <div class="flex items-center gap-3">
+                    <button id="btn-select-dir" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium focus:ring-4 focus:ring-slate-200">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i> Select Obsidian Vault
+                    </button>
+                    <div id="dir-status" class="text-sm text-slate-500 flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-md border border-slate-200 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                        <i data-lucide="x-circle" class="w-4 h-4 text-red-400 shrink-0"></i> 
+                        <span>No folder selected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Target URL & Settings -->
+            <div>
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">2. Transcript Source</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Podcast URL</label>
+                        <div class="relative">
+                            <i data-lucide="link" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <input type="url" id="input-url" value="https://www.ft.com/content/d4ef80c0-abbc-40c4-98d8-c1292c26edeb?syn-25a6b1a6=1" placeholder="https://example.com/podcast-episode-transcript" class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition-all">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1 flex items-center justify-between">
+                            <span>CSS Selector (Advanced)</span>
+                            <span class="text-slate-400 font-normal" title="Leave as 'p' to grab all paragraphs. Change if the site has a specific container like '.transcript-content' or 'article'.">Hover for info</span>
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="code" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                            <input type="text" id="input-selector" value="p" placeholder="e.g., .transcript-body, article, p" class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition-all">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Action -->
+            <div class="pt-2">
+                <button id="btn-fetch" class="w-full flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors font-semibold shadow-md shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i data-lucide="download-cloud" class="w-5 h-5"></i>
+                    Fetch and Save to Obsidian
+                </button>
+            </div>
+
+            <!-- Log Output -->
+            <div class="mt-auto">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Activity Log</h3>
+                    <button id="btn-clear-log" class="text-xs text-slate-400 hover:text-slate-600">Clear</button>
+                </div>
+                <div id="log-container" class="bg-slate-900 text-green-400 font-mono text-xs p-4 rounded-lg h-32 overflow-y-auto shadow-inner">
+                    <div class="text-slate-500">System ready. Awaiting instructions...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // State Variables
+        let directoryHandle = null;
+
+        // DOM Elements
+        const btnSelectDir = document.getElementById('btn-select-dir');
+        const dirStatus = document.getElementById('dir-status');
+        const inputUrl = document.getElementById('input-url');
+        const inputSelector = document.getElementById('input-selector');
+        const btnFetch = document.getElementById('btn-fetch');
+        const logContainer = document.getElementById('log-container');
+        const btnClearLog = document.getElementById('btn-clear-log');
+
+        // Logging utility
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'mb-1';
+            
+            let colorClass = 'text-slate-300'; // default info
+            if (type === 'success') colorClass = 'text-green-400';
+            if (type === 'error') colorClass = 'text-red-400';
+            if (type === 'warn') colorClass = 'text-yellow-400';
+
+            logEntry.innerHTML = `<span class="text-slate-500">[${time}]</span> <span class="${colorClass}">${message}</span>`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        btnClearLog.addEventListener('click', () => {
+            logContainer.innerHTML = '';
+        });
+
+        async function fetchWithFallbacks(url) {
+            const attempts = [
+                {
+                    name: 'AllOrigins JSON',
+                    fetcher: async () => {
+                        const endpoint = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                        const response = await fetch(endpoint);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const data = await response.json();
+                        return { text: data.contents || '', format: 'html' };
+                    }
+                },
+                {
+                    name: 'AllOrigins RAW',
+                    fetcher: async () => {
+                        const endpoint = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                        const response = await fetch(endpoint);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        return { text: await response.text(), format: 'html' };
+                    }
+                },
+                {
+                    name: 'jina.ai relay',
+                    fetcher: async () => {
+                        const endpoint = `https://r.jina.ai/http://${url.replace(/^https?:\/\//i, '')}`;
+                        const response = await fetch(endpoint);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        return { text: await response.text(), format: 'text' };
+                    }
+                }
+            ];
+
+            const errors = [];
+
+            for (const attempt of attempts) {
+                try {
+                    addLog(`Trying fetch method: ${attempt.name}...`, 'info');
+                    const result = await attempt.fetcher();
+                    if (!result.text || !result.text.trim()) {
+                        throw new Error('Empty response body');
+                    }
+                    addLog(`Fetch succeeded via ${attempt.name}.`, 'success');
+                    return result;
+                } catch (err) {
+                    const message = err?.message || 'Unknown error';
+                    errors.push(`${attempt.name}: ${message}`);
+                    addLog(`${attempt.name} failed: ${message}`, 'warn');
+                }
+            }
+
+            throw new Error(`All fetch methods failed. ${errors.join(' | ')}`);
+        }
+
+        function extractTranscriptFromHtml(htmlString, selector) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+
+            let pageTitle = doc.querySelector('title')?.innerText.trim() || 'Podcast Transcript';
+            pageTitle = pageTitle.split('|')[0].trim();
+
+            const elements = doc.querySelectorAll(selector);
+            if (elements.length === 0) {
+                throw new Error(`No elements found for selector '${selector}'.`);
+            }
+
+            let transcriptContent = '';
+            let paragraphCount = 0;
+
+            elements.forEach((el) => {
+                const text = el.innerText.trim();
+                if (text.length > 0) {
+                    transcriptContent += `${text}\n\n`;
+                    paragraphCount++;
+                }
+            });
+
+            if (paragraphCount === 0) {
+                throw new Error('Found matching elements, but they contained no text.');
+            }
+
+            return { pageTitle, transcriptContent, paragraphCount };
+        }
+
+        function extractTranscriptFromText(rawText) {
+            const normalized = rawText.replace(/\r\n/g, '\n');
+            const marker = 'Markdown Content:';
+            const markerIndex = normalized.indexOf(marker);
+            const contentRegion = markerIndex >= 0
+                ? normalized.slice(markerIndex + marker.length).trim()
+                : normalized;
+
+            const lines = contentRegion
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+
+            let pageTitle = 'Podcast Transcript';
+            const heading = lines.find((line) => line.startsWith('# '));
+            if (heading) pageTitle = heading.replace(/^#\s+/, '').trim();
+
+            const transcriptLines = lines.filter((line) => {
+                if (line === 'Markdown Content:') return false;
+                if (line.startsWith('# ')) return false;
+                if (line.startsWith('Title:')) return false;
+                if (line.startsWith('URL Source:')) return false;
+                if (line.startsWith('Published Time:')) return false;
+                if (line.startsWith('*   [')) return false;
+                if (line.startsWith('[Accessibility help]')) return false;
+                if (line.startsWith('Search the FT Search')) return false;
+                return true;
+            });
+
+            if (transcriptLines.length === 0) {
+                throw new Error('Text fallback succeeded, but no usable transcript lines were found.');
+            }
+
+            return {
+                pageTitle,
+                transcriptContent: `${transcriptLines.join('\n\n')}\n`,
+                paragraphCount: transcriptLines.length
+            };
+        }
+
+        // 1. Directory Selection Logic
+        btnSelectDir.addEventListener('click', async () => {
+            try {
+                // Feature detection
+                if (!window.showDirectoryPicker) {
+                    addLog("Your browser does not support the File System Access API. Please use a recent version of Chrome, Edge, or Opera.", "error");
+                    return;
+                }
+
+                directoryHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite'
+                });
+
+                dirStatus.innerHTML = `
+                    <i data-lucide="folder-check" class="w-4 h-4 text-green-500 shrink-0"></i> 
+                    <span class="font-medium text-slate-700 truncate">${directoryHandle.name}</span>
+                `;
+                lucide.createIcons(); // re-init icons for the new HTML
+                addLog(`Successfully linked vault folder: ${directoryHandle.name}`, 'success');
+
+            } catch (err) {
+                // User cancelled or error occurred
+                if (err.name !== 'AbortError') {
+                    addLog(`Error selecting directory: ${err.message}`, 'error');
+                }
+            }
+        });
+
+        // 2. Fetch, Parse, and Save Logic
+        btnFetch.addEventListener('click', async () => {
+            const url = inputUrl.value.trim();
+            const selector = inputSelector.value.trim() || 'p';
+
+            // Validation
+            if (!directoryHandle) {
+                addLog("Action denied: Please select your Obsidian Vault directory first.", "error");
+                // Visual shake effect
+                btnSelectDir.classList.add('animate-bounce');
+                setTimeout(() => btnSelectDir.classList.remove('animate-bounce'), 1000);
+                return;
+            }
+
+            if (!url) {
+                addLog("Action denied: Please enter a valid podcast URL.", "error");
+                inputUrl.focus();
+                return;
+            }
+
+            try {
+                btnFetch.disabled = true;
+                btnFetch.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Processing...`;
+                lucide.createIcons();
+
+                // Step A: Fetch webpage with resilient fallbacks
+                addLog(`Fetching URL: ${url}...`);
+                const fetchedPage = await fetchWithFallbacks(url);
+
+                // Step B: Parse content based on source type
+                let pageTitle = 'Podcast Transcript';
+                let transcriptContent = '';
+                let paragraphCount = 0;
+
+                if (fetchedPage.format === 'html') {
+                    addLog('Parsing HTML content...', 'info');
+                    ({ pageTitle, transcriptContent, paragraphCount } = extractTranscriptFromHtml(fetchedPage.text, selector));
+                } else {
+                    addLog('Parsing text fallback. CSS selector is ignored for this source.', 'warn');
+                    ({ pageTitle, transcriptContent, paragraphCount } = extractTranscriptFromText(fetchedPage.text));
+                }
+
+                addLog(`Extracted ${paragraphCount} paragraphs of text.`, 'info');
+
+                // Step C: Format as Markdown for Obsidian
+                const currentDate = new Date().toISOString().split('T')[0];
+                
+                // YAML Frontmatter + Content
+                const markdownDoc = `---
+title: "${pageTitle}"
+source: "${url}"
+date: ${currentDate}
+tags: [podcast, transcript]
+---
+
+# ${pageTitle}
+
+*Source: [Link](${url})*
+*Fetched on: ${currentDate}*
+
+---
+
+${transcriptContent}
+`;
+
+                // Step D: Generate File Name and Save
+                // Make title safe for file systems
+                let safeFileName = pageTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                // Truncate if too long
+                if (safeFileName.length > 50) safeFileName = safeFileName.substring(0, 50);
+                const finalFileName = `${safeFileName}.md`;
+
+                addLog(`Creating file: ${finalFileName}...`);
+
+                // Create/Get the file handle in the user's selected directory
+                const fileHandle = await directoryHandle.getFileHandle(finalFileName, { create: true });
+                
+                // Create a writable stream to the file
+                const writable = await fileHandle.createWritable();
+                
+                // Write the markdown contents
+                await writable.write(markdownDoc);
+                
+                // Close the file
+                await writable.close();
+
+                addLog(`Success! File saved directly to your vault.`, 'success');
+
+            } catch (err) {
+                addLog(`Process Failed: ${err.message}`, 'error');
+                console.error(err);
+            } finally {
+                // Reset Button
+                btnFetch.disabled = false;
+                btnFetch.innerHTML = `<i data-lucide="download-cloud" class="w-5 h-5"></i> Fetch and Save to Obsidian`;
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

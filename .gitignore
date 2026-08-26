@@ -1,0 +1,55 @@
+# Python Environment & Bytecode
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node Dependencies
+node_modules/
+
+# Operational & Raw Materials
+RawMaterials/
+Sources/
+Vault/
+Bin/
+
+# Runtime Cache, Sessions & Data State
+.data/
+feed_cache.json
+sync_history.json
+web_session.json
+*.db
+*.sqlite
+*.sqlite3
+
+# Audio / Media Outputs
+*.mp3
+*.wav
+*.m4a
+*.ogg
+
+# Logs
+*.log
+app_log.txt
+app_restart.log
+podcast_sync.log
+
+# Config & Secrets
+config.json
+
+# Scratch, Testing & Agent Workspace Folders
+scratch/
+.agents/
+.checkpoints/
+.claude/
+
+# Binary Packages & Installers
+*.pkg
+*.dmg
+*.zip
+*.tar.gz
+
+# OS Metadata
+.DS_Store
+Thumbs.db
