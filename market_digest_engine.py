@@ -191,17 +191,15 @@ class MarketDigestEngine:
 
     def _compute_history_deltas(self, market_results, cb_data, obs_date):
         db_path = self.cb_config.get("macro_history_db_path", macro_history.DB_PATH_DEFAULT)
-        deltas = {}
+        series_ids = []
         for point, data in market_results:
             sym = (point.get('symbol') or '').upper()
-            if not sym:
-                continue
-            series_id = f"{sym}.value"
-            deltas[series_id] = macro_history.compute_deltas(series_id, obs_date, db_path)
+            if sym:
+                series_ids.append(f"{sym}.value")
         for sym in cb_data.get("central_bank_rates", {}):
-            series_id = f"{sym.upper()}.value"
-            deltas[series_id] = macro_history.compute_deltas(series_id, obs_date, db_path)
-        return deltas
+            if sym:
+                series_ids.append(f"{sym.upper()}.value")
+        return macro_history.compute_deltas_bulk(series_ids, obs_date, db_path)
 
     # ── Data coverage ───────────────────────────────────────────────────
 

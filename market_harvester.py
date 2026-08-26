@@ -130,7 +130,7 @@ class MarketHarvester:
                     params["from_symbol"] = parts[0].strip()
                     params["to_symbol"] = parts[1].strip()
                 else:
-                    logger.error(f"Invalid forex format for {symbol}. Use XXX/YYY format.")
+                    logger.error(f"Invalid forex format for {symbol}. Use BASE/QUOTE format.")
                     return None
                     
                 response = requests.get(base_url, params=params, timeout=15)

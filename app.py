@@ -8,7 +8,7 @@ os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 import datetime
 import atexit
-from main import execute_sync, clear_vault_history, execute_sync_generator, cancel_event
+from main import clear_vault_history, execute_sync_generator, cancel_event
 from doc_processor import process_documents_generator, get_document_stats
 from web_harvester import WebHarvester
 from arxiv_harvester import ArxivHarvester
@@ -18,7 +18,8 @@ from scheduler import add_schedule, list_schedules, cancel_schedule, delete_sche
 from audio_overview_engine import AudioOverviewEngine, AVAILABLE_VOICES
 
 app = Flask(__name__, static_folder='public')
-CORS(app)
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080").split(",")
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 harvester = WebHarvester()
 arxiv_harvester = ArxivHarvester()
@@ -1371,4 +1372,4 @@ def static_proxy(path):
 
 if __name__ == '__main__':
     print("Starting Podcast-to-Obsidian Web Management Interface on http://localhost:8080")
-    app.run(host='0.0.0.0', port=8080, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=8080, debug=os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't'), use_reloader=False)

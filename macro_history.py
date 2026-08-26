@@ -147,50 +147,135 @@ def _change_block(latest_value, row):
     return {'date': date, 'value': value, 'change': change, 'pct_change': pct}
 
 
+def compute_deltas_bulk(series_ids, as_of_date, db_path=DB_PATH_DEFAULT):
+    """Bulk historical comparison for multiple series in batched queries.
+    Returns dict mapping series_id -> {latest, prev_day, prev_week, prev_month, range_30d, n_obs}.
+    """
+    if not series_ids:
+        return {}
+
+    # Deduplicate while preserving order or filtering out empty items
+    unique_ids = []
+    seen = set()
+    for sid in series_ids:
+        if sid and sid not in seen:
+            seen.add(sid)
+            unique_ids.append(sid)
+
+    if not unique_ids:
+        return {}
+
+    as_of_dt = datetime.datetime.strptime(as_of_date, "%Y-%m-%d").date()
+    week_target = (as_of_dt - datetime.timedelta(days=7)).isoformat()
+    month_target = (as_of_dt - datetime.timedelta(days=30)).isoformat()
+    range_start = (as_of_dt - datetime.timedelta(days=30)).isoformat()
+
+    results = {}
+    CHUNK_SIZE = 500
+    conn = _connect(db_path)
+    try:
+        for i in range(0, len(unique_ids), CHUNK_SIZE):
+            chunk = unique_ids[i:i + CHUNK_SIZE]
+            placeholders = ','.join(['?'] * len(chunk))
+
+            # 1. Fetch latest (rn=1) and previous observation (rn=2) relative to as_of_date
+            q_latest = f"""
+                WITH ranked AS (
+                    SELECT series_id, obs_date, value,
+                           ROW_NUMBER() OVER (PARTITION BY series_id ORDER BY obs_date DESC) as rn
+                    FROM observations
+                    WHERE series_id IN ({placeholders}) AND obs_date <= ?
+                )
+                SELECT series_id, obs_date, value, rn FROM ranked WHERE rn IN (1, 2)
+            """
+            latest_rows = conn.execute(q_latest, chunk + [as_of_date]).fetchall()
+            latest_map = {}
+            prev_day_map = {}
+            for sid, od, val, rn in latest_rows:
+                if rn == 1:
+                    latest_map[sid] = (od, val)
+                elif rn == 2:
+                    prev_day_map[sid] = (od, val)
+
+            # 2. Prev week (rn=1 <= week_target)
+            q_target = f"""
+                WITH ranked AS (
+                    SELECT series_id, obs_date, value,
+                           ROW_NUMBER() OVER (PARTITION BY series_id ORDER BY obs_date DESC) as rn
+                    FROM observations
+                    WHERE series_id IN ({placeholders}) AND obs_date <= ?
+                )
+                SELECT series_id, obs_date, value FROM ranked WHERE rn = 1
+            """
+            prev_week_rows = conn.execute(q_target, chunk + [week_target]).fetchall()
+            prev_week_map = {sid: (od, val) for sid, od, val in prev_week_rows}
+
+            # 3. Prev month (rn=1 <= month_target)
+            prev_month_rows = conn.execute(q_target, chunk + [month_target]).fetchall()
+            prev_month_map = {sid: (od, val) for sid, od, val in prev_month_rows}
+
+            # 4. 30d min/max range
+            q_range = f"""
+                SELECT series_id, MIN(value), MAX(value)
+                FROM observations
+                WHERE series_id IN ({placeholders}) AND obs_date >= ? AND obs_date <= ? AND value IS NOT NULL
+                GROUP BY series_id
+            """
+            range_rows = conn.execute(q_range, chunk + [range_start, as_of_date]).fetchall()
+            range_map = {sid: (mn, mx) for sid, mn, mx in range_rows}
+
+            # 5. Total observation count per series
+            q_count = f"""
+                SELECT series_id, COUNT(*)
+                FROM observations
+                WHERE series_id IN ({placeholders})
+                GROUP BY series_id
+            """
+            count_rows = conn.execute(q_count, chunk).fetchall()
+            count_map = {sid: cnt for sid, cnt in count_rows}
+
+            for sid in chunk:
+                if sid not in latest_map:
+                    results[sid] = {
+                        'latest': None, 'prev_day': None, 'prev_week': None,
+                        'prev_month': None, 'range_30d': None, 'n_obs': 0
+                    }
+                    continue
+
+                latest_date, latest_value = latest_map[sid]
+                p_day = prev_day_map.get(sid)
+                p_wk = prev_week_map.get(sid)
+                p_mo = prev_month_map.get(sid)
+                rng = range_map.get(sid)
+                cnt = count_map.get(sid, 0)
+
+                range_30d = {'min': rng[0], 'max': rng[1]} if rng and rng[0] is not None else None
+
+                results[sid] = {
+                    'latest': {'date': latest_date, 'value': latest_value},
+                    'prev_day': _change_block(latest_value, p_day),
+                    'prev_week': _change_block(latest_value, p_wk),
+                    'prev_month': _change_block(latest_value, p_mo),
+                    'range_30d': range_30d,
+                    'n_obs': cnt,
+                }
+    finally:
+        conn.close()
+
+    return results
+
+
 def compute_deltas(series_id, as_of_date, db_path=DB_PATH_DEFAULT):
     """Real historical comparison for one series, each lookup resolving to
     'most recent obs_date <= target date' so weekends/gaps resolve naturally.
 
     Returns {latest, prev_day, prev_week, prev_month, range_30d, n_obs}.
     """
-    conn = _connect(db_path)
-    try:
-        latest_row = _row_leq(conn, series_id, as_of_date)
-        if latest_row is None:
-            return {'latest': None, 'prev_day': None, 'prev_week': None,
-                    'prev_month': None, 'range_30d': None, 'n_obs': 0}
-
-        latest_date, latest_value = latest_row
-        prev_day_row = _row_lt(conn, series_id, latest_date)
-
-        as_of_dt = datetime.datetime.strptime(as_of_date, "%Y-%m-%d").date()
-        week_target = (as_of_dt - datetime.timedelta(days=7)).isoformat()
-        month_target = (as_of_dt - datetime.timedelta(days=30)).isoformat()
-        prev_week_row = _row_leq(conn, series_id, week_target)
-        prev_month_row = _row_leq(conn, series_id, month_target)
-
-        range_start = (as_of_dt - datetime.timedelta(days=30)).isoformat()
-        range_row = conn.execute(
-            "SELECT MIN(value), MAX(value) FROM observations "
-            "WHERE series_id=? AND obs_date>=? AND obs_date<=? AND value IS NOT NULL",
-            (series_id, range_start, as_of_date),
-        ).fetchone()
-        range_30d = {'min': range_row[0], 'max': range_row[1]} if range_row and range_row[0] is not None else None
-
-        n_obs = conn.execute(
-            "SELECT COUNT(*) FROM observations WHERE series_id=?", (series_id,)
-        ).fetchone()[0]
-
-        return {
-            'latest': {'date': latest_date, 'value': latest_value},
-            'prev_day': _change_block(latest_value, prev_day_row),
-            'prev_week': _change_block(latest_value, prev_week_row),
-            'prev_month': _change_block(latest_value, prev_month_row),
-            'range_30d': range_30d,
-            'n_obs': n_obs,
-        }
-    finally:
-        conn.close()
+    res = compute_deltas_bulk([series_id], as_of_date, db_path)
+    return res.get(series_id, {
+        'latest': None, 'prev_day': None, 'prev_week': None,
+        'prev_month': None, 'range_30d': None, 'n_obs': 0
+    })
 
 
 def detect_policy_rate_status(series_id, latest_value, latest_date, db_path=DB_PATH_DEFAULT):
